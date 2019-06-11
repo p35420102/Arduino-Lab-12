@@ -1,0 +1,75 @@
+#include <LWiFi.h>
+#include <WiFiClient.h>
+#include "MCS.h"
+#include "LTimer.h"
+#include "DHT.h"
+#define DHTPIN 2
+#define DHTTYPE DHT11
+#define _SSID "dong-ye home"
+#define _KEY  "0975621919"
+float hic, hif;
+int j = 0, flag = 0;;
+float h, t, f;
+LTimer timer0(LTIMER_0);
+// Assign AP ssid / password here
+DHT dht(DHTPIN, DHTTYPE);
+MCSDevice mcs("DKGRDWrc", "Qel1T58oNcUH5KBu");
+MCSDisplayFloat  Temperature("Temperature");//·Å«×
+MCSDisplayFloat  Humidity("Humidity");//Àã«×
+void setup() {
+  Serial.begin(9600);
+  Serial.println(F("DHTxx test!"));
+  dht.begin();
+  timer0.begin();
+  Temperature.set(t);
+  Humidity.set(h);
+  timer0.start(10000, LTIMER_REPEAT_MODE, aaaaa, NULL);
+  while (WL_CONNECTED != WiFi.status())
+  {
+    Serial.print("WiFi.begin(");
+    Serial.print(_SSID);
+    Serial.print(",");
+    Serial.print(_KEY);
+    Serial.println(")...");
+    WiFi.begin(_SSID, _KEY);
+  }
+  mcs.addChannel(Humidity);
+  mcs.addChannel(Temperature);
+
+  Serial.println("WiFi connected !!");
+  while (!mcs.connected())
+  {
+    Serial.println("MCS.connect()...");
+    mcs.connect();
+  }
+  Serial.println("MCS connected !!");
+}
+void aaaaa(void *usr_data)
+{
+  Serial.print(F("Humidity: "));
+  Serial.print(h);
+  Serial.print(F("%  Temperature: "));
+  Serial.println(t);
+  Serial.println("µo°e");
+  flag = 1;
+}
+void loop() {
+  Serial.print("process(");
+  Serial.print(millis());
+  Serial.println(")");
+  mcs.process(100);
+  h = dht.readHumidity();
+  t = dht.readTemperature();
+  if (flag)
+  { Temperature.set(t);
+    Humidity.set(h);
+    flag = 0;
+  }
+  while (!mcs.connected())
+  {
+    Serial.println("re-connect to MCS...");
+    mcs.connect();
+    if (mcs.connected())
+      Serial.println("MCS connected !!");
+  }
+}

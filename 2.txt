@@ -1,0 +1,44 @@
+#include "Arduino.h"
+#include "LTimer.h"
+#include "DHT.h"
+#define DHTPIN 2
+#define DHTTYPE DHT11
+
+DHT dht(DHTPIN, DHTTYPE);
+float h;
+float t;
+float f;
+
+void setup() {
+  LTimer timer0(LTIMER_0);
+  Serial.begin(9600);
+  Serial.println(F("DHTxx test!"));
+  dht.begin();
+  timer0.begin();
+  timer0.start(1000, LTIMER_REPEAT_MODE, _callback0, NULL);
+}
+void _callback0(void *usr_data)
+{
+  if (isnan(h) || isnan(t) || isnan(f)){
+    Serial.println(F("Failed to read from DHT sensor!"));
+    return;
+  }
+  float hif = dht.computeHeatIndex(f, h);
+  float hic = dht.computeHeatIndex(t, h, false);
+  Serial.print(F("Humidity: "));
+  Serial.print(h);
+  Serial.print(F("%  Temperature: "));
+  Serial.print(t);
+  Serial.print(F("¢XC "));
+  Serial.print(f);
+  Serial.print(F("¢XF  Heat index: "));
+  Serial.print(hic);
+  Serial.print(F("¢XC "));
+  Serial.print(hif);
+  Serial.println(F("¢XF"));
+}
+void loop() {
+  h = dht.readHumidity();
+  t = dht.readTemperature();
+  f = dht.readTemperature(true);
+}
